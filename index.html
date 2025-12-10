@@ -1,0 +1,533 @@
+import React, { useState } from 'react';
+import { 
+  Heart, Music, Mic, Users, Calendar, ClipboardList, Send, 
+  CheckCircle, Sparkles, MessageCircle, Trash2, Edit, 
+  X, CheckSquare, AlignLeft, Type, AlertTriangle 
+} from 'lucide-react';
+
+const WeddingSurveyForm = () => {
+  // 1. 定義初始問卷結構 (Data-Driven)
+  const initialSections = [
+    {
+      id: 'basic',
+      title: '基本資訊',
+      icon: ClipboardList,
+      questions: [
+        { id: 'b1', type: 'text', label: '新郎姓名' },
+        { id: 'b2', type: 'text', label: '新娘姓名' },
+        { id: 'b3', type: 'date', label: '婚禮日期' },
+        { id: 'b4', type: 'text', label: '婚禮舉行地點' }
+      ]
+    },
+    {
+      id: 'style',
+      title: '婚禮風格與氛圍',
+      icon: Heart,
+      questions: [
+        { 
+          id: 's1', type: 'checkbox', label: '您希望婚禮的整體氛圍是什麼樣的？(可複選)', 
+          options: ['優雅浪漫', '輕鬆幽默', '熱烈熱情', '正式莊重', '其他（請具體描述）'] 
+        },
+        { 
+          id: 's2', type: 'checkbox', label: '您希望主持人的風格是什麼樣的？(可複選)', 
+          options: ['輕鬆幽默，讓來賓開心', '正式莊重，尊重儀式感', '活潑熱情，讓氛圍更加熱烈', '輕快、自然，保持輕鬆的氛圍', '其他（請具體描述）'] 
+        },
+        { 
+          id: 's3', type: 'checkbox', label: '婚禮過程中，您希望主持人更多強調哪些方面？(可複選)', 
+          options: ['夫妻的愛情故事', '家庭與朋友的祝福', '婚禮儀式的莊重感', '互動遊戲或有趣的環節', '其他（請具體描述）'] 
+        },
+        { 
+          id: 's4', type: 'radio', label: '在婚禮上，您希望主持人如何與來賓互動？', 
+          options: ['輕鬆、隨和地與來賓互動', '鼓勵來賓參與某些環節', '保持較少互動，專注於主持', '其他（請具體描述）'] 
+        }
+      ]
+    },
+    {
+      id: 'story',
+      title: '新人的背景與故事',
+      icon: Users,
+      questions: [
+        { id: 'st1', type: 'textarea', label: '新郎與新娘的相識過程是什麼？' },
+        { id: 'st2', type: 'textarea', label: '彼此認為最浪漫的事' },
+        { id: 'st3', type: 'textarea', label: '交往多久? 工作、平常相處是遠距離嗎？' },
+        { id: 'st4', type: 'textarea', label: '這一年來大概多久見一次？' },
+        { id: 'st5', type: 'textarea', label: '如何維繫彼此的感情？' },
+        { id: 'st6', type: 'textarea', label: '如何確定對方就是對的人？' },
+        { id: 'st7', type: 'textarea', label: '用一個狀態形容 對方在自己心中的樣子' },
+        { id: 'st8', type: 'textarea', label: '對方為自己做過最浪慢的事' },
+        { id: 'st9', type: 'textarea', label: '有沒有特別的家庭成員或朋友，希望在婚禮中被提到或特別感謝？' },
+        { id: 'st10', type: 'textarea', label: '您希望在婚禮中有沒有特別的驚喜或互動環節？' },
+        { id: 'st11', type: 'textarea', label: '婚禮中是否有特別的元素（例如：文化、家庭傳統、特定歌曲或習俗）您希望強調？' }
+      ]
+    },
+    {
+      id: 'flow',
+      title: '婚禮儀式與流程',
+      icon: Calendar,
+      questions: [
+        { 
+          id: 'f1', type: 'checkbox', label: '婚禮中的主要儀式，您希望強調哪些？(可複選)', 
+          options: ['誓言交換', '交換戒指', '第一支舞', '乾杯儀式', '父母感謝', '其他（請具體描述）'] 
+        },
+        { 
+          id: 'f2', type: 'radio', label: '婚禮儀式結束後，您是否希望主持人帶領其他活動（如：晚宴、遊戲、表演等）？', 
+          options: ['是', '否', '不確定'] 
+        },
+        { 
+          id: 'f3', type: 'radio', label: '您希望婚禮的流程緊湊還是稍微輕鬆一些？', 
+          options: ['緊湊，按時完成每個環節', '輕鬆，給來賓更多自由交流的時間'] 
+        }
+      ]
+    },
+    {
+      id: 'req',
+      title: '婚禮主持的具體要求',
+      icon: Mic,
+      questions: [
+        { 
+          id: 'r1', type: 'checkbox', label: '您希望主持人在婚禮中使用哪些語言或語氣？(可複選)', 
+          options: ['輕鬆幽默，帶有笑點', '端莊正式，專注於儀式感', '感性、溫馨，注重情感表達', '其他（請具體描述）'] 
+        },
+        { 
+          id: 'r2', type: 'radio', label: '您是否希望主持人提前與您進行一對一的會議，了解婚禮的詳細安排？', 
+          options: ['是', '否', '無所謂'] 
+        },
+        { id: 'r3', type: 'textarea', label: '婚禮中是否有您希望避免的事情？' }
+      ]
+    },
+    {
+      id: 'music',
+      title: '婚禮的音樂與其他細節',
+      icon: Music,
+      questions: [
+        { id: 'm1', type: 'text', label: '有愛情主題曲嗎？' },
+        { id: 'm2', type: 'textarea', label: '平常都聽什麼歌？' },
+        { id: 'm3', type: 'textarea', label: '婚禮的歌單？' },
+        { id: 'm4', type: 'textarea', label: '您有沒有希望在婚禮中播放的特別影片或圖片？' },
+        { id: 'm5', type: 'textarea', label: '婚禮中是否有某些特定的主題或顏色，您希望主持人參考？' },
+        { id: 'm6', type: 'textarea', label: '您有沒有對婚禮流程中特定環節的時間長短有特別要求？' }
+      ]
+    },
+    {
+      id: 'other',
+      title: '其他建議與期望',
+      icon: MessageCircle,
+      questions: [
+        { id: 'o1', type: 'textarea', label: '對主持人有任何特殊的期望或要求嗎？' },
+        { id: 'o2', type: 'textarea', label: '是否有其他您認為非常重要的細節，主持人需要注意的地方？' }
+      ]
+    }
+  ];
+
+  const [sections, setSections] = useState(initialSections);
+  const [formData, setFormData] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false); // 編輯模式開關
+  const [confirmDelete, setConfirmDelete] = useState(null); // 用於確認刪除的狀態 {sIdx, qIdx}
+  const [submitError, setSubmitError] = useState(false); // 提交錯誤提示
+
+  // --- 編輯功能 ---
+  
+  // 1. 觸發確認刪除彈窗
+  const startDeleteQuestion = (sectionIndex, questionIndex) => {
+    // 儲存待刪除問題的索引，等待確認
+    setConfirmDelete({ sIdx: sectionIndex, qIdx: questionIndex });
+  };
+
+  // 2. 執行刪除
+  const handleConfirmDelete = () => {
+    if (confirmDelete) {
+      const { sIdx, qIdx } = confirmDelete;
+      const newSections = [...sections];
+      // 確保深拷貝以觸發 React 更新
+      newSections[sIdx].questions = [...newSections[sIdx].questions];
+      newSections[sIdx].questions.splice(qIdx, 1);
+      setSections(newSections);
+      setConfirmDelete(null); // 關閉彈窗
+    }
+  };
+
+  // 3. 取消刪除
+  const handleCancelDelete = () => {
+    setConfirmDelete(null); // 關閉彈窗
+  };
+
+  const addQuestion = (sectionIndex, type) => {
+    const newSections = [...sections];
+    const newId = `new_${Date.now()}`;
+    let newQuestion = { id: newId, label: '請輸入問題標題...', type };
+    
+    if (type === 'checkbox' || type === 'radio') {
+      newQuestion.options = ['選項 1', '選項 2', '我想要補充...']; // 更改選項名稱
+    }
+    
+    // 確保深拷貝以觸發 React 更新
+    newSections[sectionIndex].questions = [...newSections[sectionIndex].questions, newQuestion];
+    setSections(newSections);
+  };
+
+  const updateQuestionLabel = (sectionIndex, questionIndex, newLabel) => {
+    const newSections = [...sections];
+    // 確保深拷貝以觸發 React 更新
+    newSections[sectionIndex].questions = [...newSections[sectionIndex].questions];
+    newSections[sectionIndex].questions[questionIndex].label = newLabel;
+    setSections(newSections);
+  };
+
+  // --- 填寫功能 ---
+
+  const handleInputChange = (questionId, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [questionId]: value
+    }));
+  };
+
+  const handleCheckboxChange = (questionId, option, checked) => {
+    setFormData(prev => {
+      const currentValues = prev[questionId] || [];
+      // 處理「我想要補充」的特殊邏輯
+      const isOther = option.startsWith('其他') || option.startsWith('我想要補充');
+      const otherPrefix = '我想要補充: ';
+      
+      let newValues;
+      if (checked) {
+        if (isOther) {
+           // 檢查是否已經有包含 '我想要補充:' 的值
+           const existingOther = currentValues.find(v => v.startsWith(otherPrefix) || v === option);
+           if(existingOther) return prev; 
+           newValues = [...currentValues, option];
+        } else {
+           newValues = [...currentValues, option];
+        }
+      } else {
+        // 取消選中
+        if (isOther) {
+          // 移除所有以 '我想要補充' 或 '其他' 開頭的項目
+          newValues = currentValues.filter(v => !v.startsWith(otherPrefix) && !v.startsWith('其他'));
+        } else {
+          newValues = currentValues.filter(v => v !== option);
+        }
+      }
+      return { ...prev, [questionId]: newValues };
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isEditMode) {
+      setSubmitError(true);
+      setTimeout(() => setSubmitError(false), 3000); // 3秒後隱藏錯誤
+      return;
+    }
+    setSubmitted(true);
+    setSubmitError(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // --- 元件 ---
+
+  const ChoiceGroup = ({ question, sectionIndex, questionIndex }) => {
+    const currentValues = formData[question.id] || (question.type === 'checkbox' ? [] : '');
+    const isMultiple = question.type === 'checkbox';
+
+    return (
+      <div className="space-y-2">
+        {question.options.map((option, optIdx) => {
+          // 判斷是否為「其他」選項
+          const isOtherOption = option.includes('其他') || option.includes('我想要補充');
+          const displayOptionText = isOtherOption ? '我想要補充...' : option;
+          const otherPrefix = '我想要補充: ';
+          
+          // 判斷選中狀態
+          let isSelected;
+          let otherTextValue = '';
+
+          if (isMultiple) {
+            // 複選邏輯
+            if (isOtherOption) {
+              const found = currentValues.find(v => v.startsWith(otherPrefix) || v === option);
+              isSelected = !!found;
+              otherTextValue = found ? found.replace(otherPrefix, '') : '';
+              if(otherTextValue === option) otherTextValue = ''; // 還沒輸入時
+            } else {
+              isSelected = currentValues.includes(option);
+            }
+          } else {
+            // 單選邏輯
+            if (isOtherOption) {
+              isSelected = (typeof currentValues === 'string') && (currentValues.startsWith(otherPrefix) || currentValues === option);
+              otherTextValue = isSelected ? currentValues.replace(otherPrefix, '') : '';
+            } else {
+              isSelected = currentValues === option;
+            }
+          }
+
+          return (
+            <div key={optIdx}>
+              <label className={`flex items-center space-x-3 p-2 rounded cursor-pointer transition-colors ${isSelected ? 'bg-rose-50 border-rose-200' : 'hover:bg-gray-50'} ${isEditMode ? 'cursor-default' : ''}`}>
+                <input
+                  type={isMultiple ? "checkbox" : "radio"}
+                  name={question.id}
+                  value={option}
+                  checked={isSelected}
+                  disabled={isEditMode}
+                  className={`w-4 h-4 text-rose-600 focus:ring-rose-500 border-gray-300 ${!isMultiple ? 'rounded-full' : 'rounded'} ${isEditMode ? 'opacity-50' : ''}`}
+                  onChange={(e) => {
+                    if (isMultiple) {
+                      handleCheckboxChange(question.id, option, e.target.checked);
+                    } else {
+                      handleInputChange(question.id, option);
+                    }
+                  }}
+                />
+                <span className={`text-gray-700 ${isEditMode ? 'opacity-50' : ''}`}>{displayOptionText}</span>
+              </label>
+
+              {/* 其他選項的輸入框 */}
+              {isOtherOption && isSelected && (
+                <div className={`ml-7 mt-2 pl-2 border-l-2 border-rose-200 ${isEditMode ? 'opacity-50' : 'animate-fadeIn'}`}>
+                  <input
+                    type="text"
+                    className={`w-full p-2 bg-rose-50/30 border-b border-rose-300 outline-none text-gray-700 placeholder-gray-400 text-sm rounded-r ${isEditMode ? 'pointer-events-none' : 'focus:border-rose-500'}`}
+                    placeholder="請在此輸入補充內容..."
+                    value={otherTextValue}
+                    disabled={isEditMode}
+                    autoFocus
+                    onChange={(e) => {
+                      const val = `${otherPrefix}${e.target.value}`;
+                      if (isMultiple) {
+                        // 更新陣列中的那個特殊值
+                        setFormData(prev => {
+                          const oldArr = prev[question.id] || [];
+                          const filtered = oldArr.filter(v => !v.startsWith(otherPrefix) && !v.startsWith('其他'));
+                          return { ...prev, [question.id]: [...filtered, val] };
+                        });
+                      } else {
+                        handleInputChange(question.id, val);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-rose-50 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full text-center">
+          <div className="mb-6 flex justify-center">
+            <div className="bg-green-100 p-4 rounded-full">
+              <CheckCircle size={64} className="text-green-600" />
+            </div>
+          </div>
+          <h2 className="text-3xl font-serif font-bold text-gray-800 mb-4">問卷已送出！</h2>
+          <p className="text-gray-600 mb-8">感謝您的填寫。如有需要，您可以重新編輯問卷結構。</p>
+          <button 
+            onClick={() => setSubmitted(false)}
+            className="bg-rose-500 text-white px-6 py-3 rounded-full hover:bg-rose-600 transition-colors"
+          >
+            返回
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 取得待刪除問題的標籤 (用於確認彈窗)
+  const getQuestionLabelToDelete = () => {
+    if (!confirmDelete) return '';
+    const section = sections[confirmDelete.sIdx];
+    const question = section?.questions[confirmDelete.qIdx];
+    return question?.label || '此問題';
+  };
+
+  return (
+    <div className="min-h-screen bg-rose-50/50 py-12 px-4 font-sans selection:bg-rose-200">
+      <div className="max-w-3xl mx-auto relative">
+        
+        {/* 編輯模式開關 */}
+        <div className="fixed top-4 right-4 z-50">
+          <button
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-lg transition-all ${
+              isEditMode 
+                ? 'bg-gray-800 text-white hover:bg-gray-700' 
+                : 'bg-white text-gray-700 hover:bg-rose-100'
+            }`}
+          >
+            {isEditMode ? <CheckCircle size={18} /> : <Edit size={18} />}
+            {isEditMode ? '完成編輯' : '編輯問卷'}
+          </button>
+        </div>
+
+        {/* Header */}
+        <div className="bg-white rounded-t-2xl shadow-lg border-t-8 border-rose-400 p-8 mb-6 text-center relative">
+           {isEditMode && <div className="absolute top-2 right-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">編輯模式中</div>}
+          <div className="flex justify-center mb-4">
+            <Sparkles className="text-rose-400" size={40} />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-serif font-bold text-gray-800 mb-4">
+            新人婚禮主持風格與個人細節問卷
+          </h1>
+          <p className="text-gray-600 leading-relaxed">
+            親愛的新人您好，為了讓您的婚禮更加完美，請協助我們填寫以下問卷。
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          
+          {sections.map((section, sIdx) => (
+            <div key={section.id} className="bg-white rounded-xl shadow-md p-6 mb-6 transition-all hover:shadow-lg">
+              {/* Section Title */}
+              <div className="flex items-center gap-3 mb-6 mt-2 border-b border-rose-200 pb-2">
+                <div className="p-2 bg-rose-100 rounded-full text-rose-600">
+                  <section.icon size={24} />
+                </div>
+                <h2 className="text-xl font-serif font-bold text-gray-800">{section.title}</h2>
+              </div>
+
+              {/* Questions Loop */}
+              <div className="space-y-6">
+                {section.questions.map((q, qIdx) => (
+                  <div key={q.id} className={`relative group p-4 rounded-lg border transition-shadow ${isEditMode ? 'border-dashed border-red-300 bg-red-50/50 shadow-md' : 'border-transparent bg-white'}`}>
+                    
+                    {/* 刪除按鈕 (僅編輯模式) */}
+                    {isEditMode && (
+                      <button
+                        type="button"
+                        onClick={() => startDeleteQuestion(sIdx, qIdx)}
+                        className="absolute top-2 right-2 p-1 bg-white text-red-400 hover:bg-red-50 hover:text-red-600 rounded-full shadow-md transition-all z-10"
+                        title="刪除題目"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+
+                    {/* 題目 Label */}
+                    <div className="mb-3">
+                      {isEditMode ? (
+                        <input 
+                          type="text" 
+                          value={q.label}
+                          onChange={(e) => updateQuestionLabel(sIdx, qIdx, e.target.value)}
+                          className="w-full font-medium text-lg text-gray-800 bg-white border-b border-blue-300 focus:border-blue-500 outline-none px-1"
+                        />
+                      ) : (
+                        <label className="block text-gray-700 font-medium text-lg">
+                          {q.label}
+                          {q.type === 'checkbox' && <span className="text-sm text-rose-500 ml-2 font-normal">(可複選)</span>}
+                        </label>
+                      )}
+                    </div>
+
+                    {/* 題目 Content */}
+                    <div>
+                      {q.type === 'text' || q.type === 'date' ? (
+                        <input
+                          type={q.type}
+                          disabled={isEditMode} // 編輯模式時不讓填寫
+                          className={`w-full p-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-rose-200 outline-none bg-white ${isEditMode ? 'opacity-50 pointer-events-none' : ''}`}
+                          placeholder={isEditMode ? "（預覽輸入框）" : ""}
+                          onChange={(e) => handleInputChange(q.id, e.target.value)}
+                        />
+                      ) : q.type === 'textarea' ? (
+                        <textarea
+                          disabled={isEditMode}
+                          className={`w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-200 outline-none min-h-[100px] ${isEditMode ? 'opacity-50 pointer-events-none' : ''}`}
+                          placeholder={isEditMode ? "（預覽文字區域）" : "請在此輸入..."}
+                          onChange={(e) => handleInputChange(q.id, e.target.value)}
+                        />
+                      ) : (
+                         <ChoiceGroup question={q} sectionIndex={sIdx} questionIndex={qIdx} />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 新增題目區域 (僅編輯模式) */}
+              {isEditMode && (
+                <div className="mt-6 pt-4 border-t border-gray-100 flex flex-wrap gap-2 justify-center">
+                  <button type="button" onClick={() => addQuestion(sIdx, 'text')} className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 text-sm font-medium">
+                    <Type size={14} /> 新增簡答
+                  </button>
+                  <button type="button" onClick={() => addQuestion(sIdx, 'textarea')} className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-600 rounded hover:bg-green-100 text-sm font-medium">
+                    <AlignLeft size={14} /> 新增詳答
+                  </button>
+                  <button type="button" onClick={() => addQuestion(sIdx, 'checkbox')} className="flex items-center gap-1 px-3 py-1.5 bg-purple-50 text-purple-600 rounded hover:bg-purple-100 text-sm font-medium">
+                    <CheckSquare size={14} /> 新增複選題
+                  </button>
+                  <button type="button" onClick={() => addQuestion(sIdx, 'radio')} className="flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-600 rounded hover:bg-orange-100 text-sm font-medium">
+                    <CheckSquare size={14} /> 新增單選題
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* 提交錯誤提示 (Custom Alert) */}
+          {submitError && (
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-2 z-50 animate-bounce-in">
+              <AlertTriangle size={20} />
+              請先點擊「完成編輯」再提交問卷！
+            </div>
+          )}
+
+          {/* Submit Button */}
+          {!isEditMode && (
+            <div className="mt-12 flex justify-center pb-12">
+              <button 
+                type="submit"
+                className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-bold py-4 px-12 rounded-full shadow-lg transform transition hover:scale-105"
+              >
+                <Send size={20} />
+                提交問卷
+              </button>
+            </div>
+          )}
+
+        </form>
+
+        {/* 刪除確認彈窗 (Custom Modal) */}
+        {confirmDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 transform transition-all animate-scale-in">
+              <div className="flex items-center mb-4">
+                <AlertTriangle size={24} className="text-red-500 mr-3" />
+                <h3 className="text-xl font-bold text-gray-800">確認刪除題目</h3>
+              </div>
+              <p className="text-gray-600 mb-6">
+                您確定要刪除「<span className="font-semibold text-red-600">{getQuestionLabelToDelete()}</span>」這個問題嗎？刪除後無法復原。
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handleCancelDelete}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 text-white bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+                >
+                  確定刪除
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+};
+
+export default WeddingSurveyForm;
